@@ -3,7 +3,7 @@ import pandas as pd
 from openpyxl import Workbook
 
 # Базовая папка с результатами
-base_folder = "results/configuration_2/"
+base_folder = "results/configuration_4/"
 
 # Создаем Excel-файл
 output_file = base_folder + "/experiment_results.xlsx"

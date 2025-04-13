@@ -257,4 +257,4 @@ if __name__ == "__main__":
     CPULoadSimulator.print_results(results)
 
 
-
+    print(7 % 5 )

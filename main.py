@@ -1,6 +1,6 @@
 from node import Server
 from distributor import RoundRobin, WeightedRoundRobin, LeastConnection, WeightedLeastConnection
-
+import random
 import csv
 from typing import List, Dict
 
@@ -144,9 +144,11 @@ configurations = {
 
 # Пример использования
 if __name__ == "__main__":
-#
-    folder_path = "results/configuration_2/"
-    servers = configurations[2][::-1]
+
+    config = 4
+    folder_path = f"results/configuration_{config}/"
+    servers = configurations[config] #[::-1]
+    #random.shuffle(servers)
 
     # Параметры симуляции
     task_time = 0.22  # каждая задача выполняется 0.3 секунды
@@ -159,29 +161,10 @@ if __name__ == "__main__":
     tasks = [[0.02, 20, 96], [0.05, 20, 48], [0.14, 20, 16]]
     #tasks = [[0.02, 20, 96], [0.02, 20, 48], [0.02, 20, 16]]
 
-
     # servers = [Server(server_id=1, bu_power=1, bandwidth_bytes=1000),
-    #            Server(server_id=2, bu_power=2, bandwidth_bytes=1000),
-    #            Server(server_id=3, bu_power=1, bandwidth_bytes=1000)
-    #            ]
 
 
-
-    # servers = [Server(server_id=1, bu_power=2.2, bandwidth_bytes=10000),
-    #            Server(server_id=2, bu_power=1.22, bandwidth_bytes=10000),
-    #            Server(server_id=3, bu_power=1.22, bandwidth_bytes=10000),
-    #            Server(server_id=4, bu_power=1.22, bandwidth_bytes=10000),
-    #            Server(server_id=5, bu_power=1.22, bandwidth_bytes=10000),
-    #            Server(server_id=6, bu_power=1.22, bandwidth_bytes=10000),
-    #            Server(server_id=7, bu_power=1.22, bandwidth_bytes=10000),
-    #            Server(server_id=8, bu_power=1.22, bandwidth_bytes=10000),
-    #            Server(server_id=9, bu_power=1, bandwidth_bytes=10000),
-    #            Server(server_id=10, bu_power=1, bandwidth_bytes=10000),
-    #            Server(server_id=11, bu_power=1, bandwidth_bytes=10000),
-    #            Server(server_id=12, bu_power=1, bandwidth_bytes=10000),
-    #            ]
-
-    distributor = LeastConnection(servers)
+    distributor = WeightedLeastConnection(servers)
 
 
     for server in servers:
@@ -199,7 +182,7 @@ if __name__ == "__main__":
         #     distributor.distribute_task(task_time, task_size)
 
 
-        if type(distributor).__name__ == "LeastConnection":
+        if type(distributor).__name__ == "LeastConnection" and (i % 2 == 0):
             # потому что если обновлться каждое изменение подключений, то распредлеление будет идти косо
             distributor.updated_nodes_connections(servers)
 
