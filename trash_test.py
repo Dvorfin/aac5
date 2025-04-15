@@ -257,4 +257,74 @@ if __name__ == "__main__":
     CPULoadSimulator.print_results(results)
 
 
-    print(7 % 5 )
+class WeightedRoundRobin:
+    def __init__(self, server_weights):
+        """
+        Инициализация WRR с весами серверов.
+
+        :param server_weights: Список кортежей вида (имя сервера, вес).
+        """
+        self.server_weights = server_weights
+        self.groups = {}  # Группы серверов с одинаковыми весами
+        self.total_weight = 0  # Общий вес всех серверов
+
+        # Группируем серверы по весам
+        for server, weight in server_weights:
+            if weight not in self.groups:
+                self.groups[weight] = []
+            self.groups[weight].append(server)
+            self.total_weight += weight
+
+        # Сортируем веса по убыванию
+        self.sorted_weights = sorted(self.groups.keys(), reverse=True)
+
+        # Текущее состояние распределения
+        self.current_index = 0  # Индекс текущего веса
+        self.group_counters = {weight: 0 for weight in self.sorted_weights}  # Счетчики для каждой группы
+
+    def get_next_server(self):
+        """
+        Получить следующий сервер для обработки задачи согласно WRR.
+
+        :return: Имя сервера, которому нужно отправить задачу.
+        """
+        while True:
+            # Выбираем текущий вес
+            current_weight = self.sorted_weights[self.current_index]
+            servers_in_group = self.groups[current_weight]
+
+            # Выбираем сервер из текущей группы
+            server_index = self.group_counters[current_weight] % len(servers_in_group)
+            server = servers_in_group[server_index]
+
+            # Увеличиваем счетчик для текущей группы
+            self.group_counters[current_weight] += 1
+
+            # Переходим к следующему весу
+            self.current_index = (self.current_index + 1) % len(self.sorted_weights)
+
+            return server
+
+
+# Пример использования
+if __name__ == "__main__":
+    # Определяем веса серверов
+    server_weights = [
+        ("Server_A", 1),
+        ("Server_B", 2),
+        ("Server_C", 2),
+        ("Server_D", 4),
+        ("Server_E", 4),
+        ("Server_F", 4)
+    ]
+
+    # Создаем экземпляр WRR
+    wrr = WeightedRoundRobin(server_weights)
+
+    print(wrr.groups)
+
+    # Распределяем 14 задач
+    tasks = 14
+    for i in range(tasks):
+        server = wrr.get_next_server()
+        print(f"Задача {i + 1} назначена на {server}")

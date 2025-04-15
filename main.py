@@ -1,5 +1,5 @@
 from node import Server
-from distributor import RoundRobin, WeightedRoundRobin, LeastConnection, WeightedLeastConnection
+from distributor import RoundRobin, WeightedRoundRobin, WeightedRoundRobin2, LeastConnection, WeightedLeastConnection
 import random
 import csv
 from typing import List, Dict
@@ -145,7 +145,7 @@ configurations = {
 # Пример использования
 if __name__ == "__main__":
 
-    config = 4
+    config = 2
     folder_path = f"results/configuration_{config}/"
     servers = configurations[config] #[::-1]
     #random.shuffle(servers)
@@ -160,11 +160,11 @@ if __name__ == "__main__":
     # 6 : 3 : 1
     tasks = [[0.02, 20, 96], [0.05, 20, 48], [0.14, 20, 16]]
     #tasks = [[0.02, 20, 96], [0.02, 20, 48], [0.02, 20, 16]]
-
+    #tasks = [[0.01, 20, 96], [0.01, 20, 48], [0.01, 20, 160]]
     # servers = [Server(server_id=1, bu_power=1, bandwidth_bytes=1000),
 
 
-    distributor = WeightedLeastConnection(servers)
+    distributor = WeightedRoundRobin2(servers)
 
 
     for server in servers:
@@ -223,7 +223,35 @@ if __name__ == "__main__":
           f"Всего отклонено: {distributor.rejected_tasks}")
 
 
-    csv_names = {"RoundRobin": "RR.csv", "WeightedRoundRobin": "WRR.csv", "LeastConnection": "LC.csv", "WeightedLeastConnection": "WLC.csv"}
+    csv_names = {"RoundRobin": "RR.csv",
+                 "WeightedRoundRobin": "WRR.csv",
+                 "WeightedRoundRobin2": "WRR.csv",
+                 "LeastConnection": "LC.csv",
+                 "WeightedLeastConnection": "WLC.csv"}
     res_csv_name = csv_names[type(distributor).__name__]
     save_servers_to_csv(servers, folder_path + res_csv_name)
-    print(servers[-1].cpu_load_history)
+    #print(servers[-1].cpu_load_history)
+
+
+    servers_load = []
+    for server in servers:
+        weighted_load = sum(server.cpu_load_history) / len(server.cpu_load_history) if server.cpu_load_history else 0
+        weighted_network = sum(server.network_load_history) / len(server.network_load_history) if server.network_load_history else 0
+        weighted_tasks = sum(server.tasks_history) / len(server.tasks_history) if server.tasks_history else 0
+        servers_load.append(weighted_load)
+
+
+    def calculate_std_dev(data):
+        if len(data) == 0:
+            return 0  # Возвращаем 0 для пустого списка
+
+        mean = sum(data) / len(data)  # Вычисляем среднее
+        variance = sum((x - mean) ** 2 for x in data) / len(data)  # Вычисляем дисперсию
+        std_dev = variance ** 0.5  # Стандартное отклонение - это корень из дисперсии
+        return std_dev
+
+    print(servers_load)
+    import numpy as np
+    std_dev = np.std(servers_load)
+    print(f"Стандартное отклонение: {std_dev}")
+    print(f"Стандартное отклонение: {calculate_std_dev(servers_load)}")
