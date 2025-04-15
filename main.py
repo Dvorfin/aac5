@@ -145,22 +145,23 @@ configurations = {
 # Пример использования
 if __name__ == "__main__":
 
-    config = 4
+    config = 2
     folder_path = f"results/configuration_{config}/"
     servers = configurations[config] #[::-1]
     #random.shuffle(servers)
 
     # Параметры симуляции
-    task_time = 0.012 # каждая задача выполняется 0.3 секунды
-    task_size = 100
+    task_time = 0.02 # каждая задача выполняется 0.3 секунды
+    task_size = 500
     tasks_per_second = 795  # 5 задач в секунду
     simulation_time = 120  # симулируем 10 секунд
 
     # task_time, task_size, tasks_per_second
     # 6 : 3 : 1
+    # 0.02 0.1 0.28
     #tasks = [[0.02, 20, 96], [0.05, 20, 48], [0.14, 20, 16]]
-    #tasks = [[0.02, 20, 96], [0.02, 20, 48], [0.02, 20, 16]]
-    tasks = [[0.02, 20, 225], [0.02, 20, 225], [0.02, 20, 225]]
+    tasks = [[0.02, 500, 96], [0.1, 1000, 48], [0.28, 2000, 16]]
+    #tasks = [[0.02, 200, 225], [0.02, 200, 225], [0.02, 200, 225]]
     # servers = [Server(server_id=1, bu_power=1, bandwidth_bytes=1000),
 
     distributor = WeightedRoundRobin2(servers)
@@ -170,14 +171,14 @@ if __name__ == "__main__":
     task_num = 1
     for i in range(1, simulation_time+1):
 
-        # for task_type in tasks:
-        #     task_num += 1
-        #     task_time, task_size, tasks_per_second = task_type
-        #     for _ in range(tasks_per_second):
-        #         distributor.distribute_task(task_time, task_size)
+        for task_type in tasks:
+            task_num += 1
+            task_time, task_size, tasks_per_second = task_type
+            for _ in range(tasks_per_second):
+                distributor.distribute_task(task_time, task_size)
         #distributor.calc_wlc_node_weights(servers)
-        for task in range(tasks_per_second):
-            distributor.distribute_task(task_time, task_size)
+        # for task in range(tasks_per_second):
+        #     distributor.distribute_task(task_time, task_size)
 
 
         if type(distributor).__name__ == "LeastConnection" and (i % 2 == 0):
