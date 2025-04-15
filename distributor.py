@@ -96,57 +96,101 @@ class WeightedRoundRobin:
             break
 
 
+import itertools
+import math
+from typing import Dict, List
+
+
 class WeightedRoundRobin2:
-    def __init__(self, servers):
+    def __init__(self, servers: List['Server']):
         self.servers = servers
         self.nodes = servers
         self.current_node_index = 0
         self.rejected_tasks = 0
 
-
-        # Группируем серверы по их мощности (bu_power)
+        # Группировка серверов по мощности
         self.server_groups = self._group_servers_by_power()
-        # Рассчитываем общий вес каждой группы
         self.group_weights = self._calculate_group_weights()
-        # Общий вес всех групп
         self.total_weight = sum(self.group_weights.values())
-        # Генератор для циклического перебора серверов внутри групп
+
+        # Подготовка детерминированного распределения
+        self._setup_weighted_distribution()
+
+        # Циклические генераторы для каждой группы
         self.server_cycles = {
             power: itertools.cycle(group)
             for power, group in self.server_groups.items()
         }
-        # Распределение нагрузки между группами (в %)
+
+        # Распределение нагрузки в процентах (для информации)
         self.group_distribution = {
             power: (weight / self.total_weight) * 100
             for power, weight in self.group_weights.items()
         }
 
-    def _group_servers_by_power(self) -> dict:
+    def _group_servers_by_power(self) -> Dict[float, List['Server']]:
         """Группирует серверы по их мощности (bu_power)."""
         groups = {}
         for server in self.servers:
-            if server.bu_power not in groups:
-                groups[server.bu_power] = []
-            groups[server.bu_power].append(server)
+            power = server.bu_power
+            if power not in groups:
+                groups[power] = []
+            groups[power].append(server)
         return groups
 
-    def _calculate_group_weights(self) -> dict:
-        """Вычисляет общий вес каждой группы серверов."""
+    def _calculate_group_weights(self) -> Dict[float, float]:
+        """Вычисляет суммарный вес каждой группы серверов."""
         return {
-            power: sum(s.bu_power for s in servers)
+            power: sum(server.bu_power for server in servers)
             for power, servers in self.server_groups.items()
         }
 
-    def get_next_server(self):
+    def _setup_weighted_distribution(self):
+        """Настраивает детерминированное распределение для дробных весов."""
+        # Находим наименьший ненулевой вес
+        non_zero_weights = [w for w in self.group_weights.values() if w > 0]
+        if not non_zero_weights:
+            raise ValueError("All server groups have zero weight")
+
+        min_weight = min(non_zero_weights)
+
+        # Масштабируем веса и округляем вверх
+        self._scaled_weights = []
+        self._total_scaled_weight = 0
+
+        for power, weight in sorted(self.group_weights.items()):
+            if weight > 0:
+                scaled = math.ceil(weight / min_weight)
+                self._scaled_weights.append((power, scaled))
+                self._total_scaled_weight += scaled
+
+        self._group_selection_counter = 0
+
+    def _select_group_by_weight(self) -> float:
+        """Выбирает группу серверов пропорционально их весу (дробные веса поддерживаются)."""
+        if not hasattr(self, '_scaled_weights'):
+            self._setup_weighted_distribution()
+
+        pos = self._group_selection_counter % self._total_scaled_weight
+        self._group_selection_counter += 1
+
+        cumulative = 0
+        for power, scaled_weight in self._scaled_weights:
+            cumulative += scaled_weight
+            if pos < cumulative:
+                return power
+
+        return self._scaled_weights[-1][0]  # fallback
+
+    def get_next_server(self) -> 'Server':
         """Возвращает следующий сервер для обработки задачи с учётом WRR."""
-        # 1. Выбираем группу с вероятностью, пропорциональной её весу
         selected_power = self._select_group_by_weight()
-        # 2. Берём следующий сервер из выбранной группы (циклический перебор)
         return next(self.server_cycles[selected_power])
 
     def distribute_task(self, task_compute_time: float, task_data_size: float):
+        """Распределяет задачу на сервер с учётом WRR."""
         if len(self.server_groups) == 1:
-            """Если сервера все равны, то чилим по раунд робину"""
+            # Все серверы одинаковые - простой Round Robin
             n = len(self.nodes)
             start_index = self.current_node_index
 
@@ -162,28 +206,17 @@ class WeightedRoundRobin2:
                     self.rejected_tasks += 1
                     break
         else:
-            server_number = self.get_next_server()
-            node = self.nodes[server_number.server_id-1]
-            if node.can_accept_task(task_compute_time, task_data_size):
-                node.add_task(task_compute_time, task_data_size)
+            server = self.get_next_server()
+            if server.can_accept_task(task_compute_time, task_data_size):
+                server.add_task(task_compute_time, task_data_size)
             else:
                 self.rejected_tasks += 1
 
+    def get_distribution_stats(self) -> Dict[float, float]:
+        """Возвращает распределение нагрузки между группами в процентах."""
+        return self.group_distribution
 
 
-    def _select_group_by_weight(self) -> float:
-        """Выбирает группу серверов пропорционально их общему весу."""
-        # Пример: для весов 4, 8.54, 2.2:
-        # total_weight = 14.74
-        # Генерируем случайное число от 0 до total_weight
-        import random
-        r = random.uniform(0, self.total_weight)
-        cumulative = 0
-        for power, weight in self.group_weights.items():
-            cumulative += weight
-            if r <= cumulative:
-                return power
-        return list(self.group_weights.keys())[-1]  # fallback
 
 
 
@@ -231,7 +264,7 @@ class LeastConnection:
             self.nodes[min_connections_node_index].add_task(task_compute_demand, task_data_size)
 
             # обновляем количество подключений
-            #self.updated_nodes_connections(self.nodes)
+            self.updated_nodes_connections(self.nodes)
 
             break
 
@@ -248,7 +281,7 @@ class WeightedLeastConnection:
 
         self.nodes_weights = [0.0] * len(nodes)
 
-        self.wlc_weight = [0.0] * len(nodes)
+        self.wlc_weight = [node.bu_power for node in self.nodes]
 
     def calc_node_weights(self):
         """Считаем вес как количество свободных ресурсов в процегнтах
@@ -272,10 +305,12 @@ class WeightedLeastConnection:
         self.updated_nodes_connections(nodes)
 
         for i in range(len(self.nodes)):
-            # вычисляем вес по формуле  w = Vc/normalize_node_weight
-           # self.wlc_weight[i] = (self.nodes_connections[i] )/self.nodes_weights[i]
-            w = [1] * 4 + [1.22] * 7 + [2.2] * 1
-            self.wlc_weight[i] = w[i] / (self.nodes_connections[i] + 1)
+            # вычисляем вес по формуле  w = node_weight/connections +1
+            #self.wlc_weight[i] = (self.nodes_connections[i] )/self.nodes_weights[i]
+            #self.wlc_weight[i] = self.nodes_weights[i] / (self.nodes_connections[i] + 1)
+            #w = [1] * 4 + [1.22] * 7 + [2.2] * 1
+
+            self.wlc_weight[i] = self.nodes_weights[i] / (self.nodes_connections[i] + 1)
 
         #print([round(w, 4) for w in self.wlc_weight], self.wlc_weight.index(min([w for w in self.wlc_weight])))
 
@@ -295,10 +330,10 @@ class WeightedLeastConnection:
             if self.nodes[i].can_accept_task(task_compute_demand, task_data_size):
                 continue
             else:
-                self.wlc_weight[i] = 5000 # если нода недоступна, то ставим ей большой вес
+                self.wlc_weight[i] = 0 # если нода недоступна, то ставим ей большой вес
 
         while True:
-            if all(conn == 5000 for conn in self.wlc_weight):  # если все ноды заняты или не могут взять задачу
+            if all(conn == 0 for conn in self.wlc_weight):  # если все ноды заняты или не могут взять задачу
                 self.rejected_tasks += 1
                 break
 
