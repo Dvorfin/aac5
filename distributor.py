@@ -50,9 +50,9 @@ class WeightedRoundRobin:
     def calc_node_weights(self):
         """Считаем вес как количество свободных ресурсов в процегнтах
         чем больше свободных, тем приоритетнее сервер"""
-        # for i in range(len(self.nodes)):
-        #     self.nodes_weights[i] = abs(self.nodes[i].current_load * 100 - 100) + self.nodes[i].bu_power # очень хорошая равномерность
-        self.nodes_weights = [1*4] * 4 + [1.22*7] * 7 + [2.2] * 1
+        for i in range(len(self.nodes)):
+            self.nodes_weights[i] = abs(self.nodes[i].current_load * 100 - 100) #+ self.nodes[i].bu_power # очень хорошая равномерность
+
 
         #print(self.nodes_weights)
         # self.nodes_weights = [1 for _ in range(4)] + [1.22 for _ in range(4)] + [2.2 for _ in range(1)]
@@ -101,7 +101,9 @@ import math
 from typing import Dict, List
 
 
-class WeightedRoundRobin2:
+class WeightedRoundRobinStatic:
+    """Веса задаются серверам  изначально и не меняются в ходе работы
+    распределяет задачи в пропорции мощности групп серверов, а внутри группы отдает задачи циклично"""
     def __init__(self, servers: List['Server']):
         self.servers = servers
         self.nodes = servers

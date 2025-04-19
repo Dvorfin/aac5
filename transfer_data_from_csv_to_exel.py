@@ -3,7 +3,8 @@ import pandas as pd
 from openpyxl import Workbook
 
 # Базовая папка с результатами
-base_folder = "results/configuration_4/"
+base_folder = "results/configuration_2/"
+base_folder = "results/configuration_2/"
 
 # Создаем Excel-файл
 output_file = base_folder + "/experiment_results.xlsx"
@@ -16,11 +17,11 @@ ws = wb.active
 ws.cell(row=1, column=1, value=base_folder)
 
 # Начальная колонка для размещения данных
-start_columns = [1, 8, 15, 22]  # Колонки A, H, N, T (2, 8, 14, 20 в индексации openpyxl)
+start_columns = [1, 8, 15, 22, 29]  # Колонки A, H, N, T (2, 8, 14, 20 в индексации openpyxl)
 
 # Запись текстовых меток в ячейки A2, G2, M2, S2
-labels = ["RR", "WRR", "LC", "WLC"]
-label_columns = [1, 8, 15, 22]  # Колонки A, G, M, S (1, 7, 13, 19 в индексации openpyxl)
+labels = ["RR", "WRRs", "WRR", "LC", "WLC"]
+label_columns = [1, 8, 15, 22, 29]  # Колонки A, G, M, S (1, 7, 13, 19 в индексации openpyxl)
 for col_idx, label in zip(label_columns, labels):
     ws.cell(row=2, column=col_idx, value=label)
 

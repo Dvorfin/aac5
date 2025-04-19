@@ -22,6 +22,18 @@ class Server:
         self.dropped_tasks = 0
         self.total_work_time = 0
 
+    def reset(self):
+        self.current_load = 0.0  # текущая нагрузка в секундах
+        self.current_network_load_bytes = 0.0
+
+        self.cpu_load_history = []
+        self.network_load_history = []
+        self.tasks_history = []
+
+        self.processed_tasks = 0
+        self.dropped_tasks = 0
+        self.total_work_time = 0
+
     def calc_tasks_execution_time(self, task_bu):
         return task_bu / self.bu_power
 
