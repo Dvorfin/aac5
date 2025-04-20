@@ -153,7 +153,7 @@ if __name__ == "__main__":
     # Параметры симуляции
     task_time = 0.02 # каждая задача выполняется 0.3 секунды
     task_size = 500
-    tasks_per_second = 732  # 5 задач в секунду
+    tasks_per_second = 736  # 5 задач в секунду
     simulation_time = 120  # симулируем 10 секунд
 
     # task_time, task_size, tasks_per_second
@@ -181,9 +181,9 @@ if __name__ == "__main__":
             distributor.distribute_task(task_time, task_size)
 
 
-        if type(distributor).__name__ == "LeastConnection" and (i % 2 == 0):
-            # потому что если обновлться каждое изменение подключений, то распредлеление будет идти косо
-            distributor.updated_nodes_connections(servers)
+        # if type(distributor).__name__ == "LeastConnection" and (i % 2 == 0):
+        #     # потому что если обновлться каждое изменение подключений, то распредлеление будет идти косо
+        #     distributor.updated_nodes_connections(servers)
 
 
 

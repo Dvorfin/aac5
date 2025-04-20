@@ -33,7 +33,7 @@ class RoundRobin:
 
                 self.rejected_tasks += 1
                 break
-
+        #print(self.current_node_index)
 
 class WeightedRoundRobin:
     def __init__(self, nodes: list):
@@ -243,7 +243,8 @@ class LeastConnection:
         :param task_data_size: Объем данных задачи (байты).
         :param task_id: Идентификатор задачи. """
           # обновляем количество подключений перед распределением задач
-
+        self.updated_nodes_connections(self.nodes)
+        #print(self.nodes_connections, self.rejected_tasks)
         for i in range(len(self.nodes)):
             '''Проверяем доступна ли нода и может ли принять задачу,
             после этого смотрим на количество подключений (задач  на ноде) и
@@ -252,16 +253,17 @@ class LeastConnection:
                 continue
             else:
                 self.nodes_connections[i] = 5000  # если нода недоступна, то ставим большое число подключений потому что потому
-
+        #print(self.rejected_tasks)
         while True:
             if all(conn == 5000 for conn in self.nodes_connections):  # если все ноды заняты или не могут взять задачу
-
+               # print(self.nodes_connections)
                 self.rejected_tasks += 1
                 break
+            #print(self.nodes_connections)
 
             min_connections = min(self.nodes_connections)   # определяем минимальное кол-во подключений среди доступных нод
             min_connections_node_index = self.nodes_connections.index(min_connections)  # определяем первый индекс среди доступных нод
-            #print(self.nodes_connections, min_connections_node_index)
+
             # отдаем задачу
             self.nodes[min_connections_node_index].add_task(task_compute_demand, task_data_size)
 
