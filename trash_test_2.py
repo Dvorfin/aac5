@@ -1,5 +1,4 @@
 from node import Server
-from distributor import WeightedRoundRobin2
 import itertools
 
 servers = [Server(server_id=1, bu_power=1, bandwidth_bytes=10000),
@@ -19,26 +18,28 @@ servers = [Server(server_id=1, bu_power=1, bandwidth_bytes=10000),
 
 # Пример использования
 if __name__ == "__main__":
+    def generate_repeating_task_list(total_tasks):
+        # Базовый паттерн
+        pattern = [0.02] * 6 + [0.1] * 3 + [0.28] * 1
+        print(pattern)
 
-    distributor = WeightedRoundRobin2(servers)
-    print(len(distributor.server_groups))
+        # Вычисляем количество полных паттернов и остаток
+        full_patterns = total_tasks // len(pattern)
+        remainder = total_tasks % len(pattern)
 
-    count_12 = 0
-    count_1_4 = 0
-    count_5_11 = 0
+        # Формируем итоговый список
+        task_list = pattern * full_patterns + pattern[:remainder]
 
-    for i in range(1000):
-        server = distributor.get_next_server()
-        if server.server_id == 12:
-            count_12 += 1
-        elif (1 <= server.server_id <= 4):
-            count_1_4 += 1
-        else:
-            count_5_11 += 1
-
-        print(f"Задача {i + 1} назначена на {server.server_id}")
+        return task_list
 
 
-    print(count_1_4 / 1000, count_5_11 / 1000, count_12 / 1000)
+    # Пример использования
+    total_tasks = 300  # Сколько всего задач сгенерировать
+    task_list = generate_repeating_task_list(total_tasks)
+    print(task_list)
+    print(sum(task_list))
+    #print(f"Список задач: {' '.join(task_list)}")
+    print(
+        f"Количество задач каждого типа: S={task_list.count(0.02)}, M={task_list.count(0.1)}, H={task_list.count(0.28)}")
 
 

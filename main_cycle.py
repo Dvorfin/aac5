@@ -205,11 +205,24 @@ configurations = {
 }
 
 
+def generate_repeating_task_list(total_tasks):
+    # Базовый паттерн
+    pattern = [0.02] * 6 + [0.1] * 3 + [0.28] * 1
+
+    # Вычисляем количество полных паттернов и остаток
+    full_patterns = total_tasks // len(pattern)
+    remainder = total_tasks % len(pattern)
+
+    # Формируем итоговый список
+    task_list = pattern * full_patterns + pattern[:remainder]
+
+    return task_list
+
 
 # Пример использования
 if __name__ == "__main__":
 
-    config = 3
+    config = 4
     folder_path = f"results/configuration_{config}/"
     servers = configurations[config] #[::-1]
     #random.shuffle(servers)
@@ -218,22 +231,24 @@ if __name__ == "__main__":
     task_time = 0.02 # каждая задача выполняется 0.3 секунды
     task_size = 500
 
+    tasks_config_experiment_3 = {1: 500, 2: 500, 3: 500, 4: 500}
+    tasks_per_second = tasks_config_experiment_3[config]
+    tasks = generate_repeating_task_list(tasks_per_second)
+    print(tasks_per_second)
+    print(tasks)
 
-    tasks_per_second = 1060  # 5 задач в секунду
+    # tasks_per_second = 184  # 5 задач в секунду
     simulation_time = 120  # симулируем 10 секунд
 
     # task_time, task_size, tasks_per_second
     # 6 : 3 : 1
     # 0.02 0.1 0.28
-    #tasks = [[0.02, 20, 96], [0.05, 20, 48], [0.14, 20, 16]]
-    #tasks = [[0.02, 500, 96], [0.1, 1000, 48], [0.28, 2000, 16]]
 
+    #tasks = [[0.02, 500, 110], [0.1, 500, 55], [0.28, 500, 18]]
+    #tasks = [[0.02, 500, 110], [0.1, 500, 55], [0.28, 500, 18]]
+    #tasks = [[0.02, 500, 105], [0.1, 500, 53], [0.28, 500, 17]]
+    #tasks = [[0.02, 500, 159], [0.1, 500, 80], [0.28, 500, 26]]
 
-    #tasks = [[0.02, 500, 220], [0.02, 500, 110], [0.02, 500, 36]]
-    #tasks = [[0.02, 500, 221], [0.02, 500, 111], [0.02, 500, 37]]
-    #tasks = [[0.02, 500, 210], [0.02, 500, 105], [0.02, 500, 35]]
-    tasks = [[0.02, 500, 318], [0.02, 500, 159], [0.02, 500, 53]]
-    # servers = [Server(server_id=1, bu_power=1, bandwidth_bytes=1000),
 
     distributor = WeightedRoundRobin(servers)
     distributors = [RoundRobin(servers),
@@ -254,7 +269,12 @@ if __name__ == "__main__":
             #     for _ in range(tasks_per_second):
             #         distributor.distribute_task(task_time, task_size)
 
-            for task in range(tasks_per_second):
+            # for task in range(tasks_per_second):
+            #     distributor.distribute_task(task_time, task_size)
+
+
+            # специально для 3 эксперимента такой обход:
+            for task in tasks:
                 distributor.distribute_task(task_time, task_size)
 
 
